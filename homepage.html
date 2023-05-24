@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chipmunk Browser</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      cursor: none;
+    }
+
+    .light-mode {
+      --bg-color: #f2f2f2;
+      --text-color: #333;
+      --search-bg-color: #e1e1e1;
+      --cursor-color: red;
+    }
+
+    .dark-mode {
+      --bg-color: #333;
+      --text-color: #f2f2f2;
+      --search-bg-color: #555;
+      --cursor-color: red;
+    }
+
+    #browser-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: var(--bg-color);
+    }
+
+    #browser {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      color: var(--text-color);
+    }
+
+    #logo {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 20px;
+    }
+
+    #search-bar {
+      display: flex;
+      align-items: center;
+      width: 400px;
+      height: 40px;
+      background-color: var(--search-bg-color);
+      border-radius: 20px;
+      padding: 5px 10px;
+    }
+
+    #search-input {
+      flex: 1;
+      border: none;
+      background-color: transparent;
+      font-size: 16px;
+      padding-left: 10px;
+      color: var(--text-color);
+    }
+
+    #search-button {
+      border: none;
+      background-color: transparent;
+      cursor: pointer;
+      padding: 0 10px;
+    }
+
+    #search-button img {
+      width: 20px;
+      height: 20px;
+    }
+
+    #search-results {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    #toggle-button {
+      margin-top: 20px;
+      background-color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+    }
+
+    #toggle-button:hover {
+      background-color: #e1e1e1;
+    }
+
+    #sidebar {
+      position: fixed;
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 120px;
+    }
+
+    #topbar {
+      position: fixed;
+      top: 5%;
+      right: 0;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 120px;
+    }
+
+    #topbar .topbar-link {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      background-color: #e1e1e1;
+      border-radius: 50%;
+    }
+
+    #topbar .topbar-link img {
+      width: 30px;
+      height: 30px;
+    }
+
+    #sidebar .sidebar-link {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      background-color: #e1e1e1;
+      border-radius: 50%;
+    }
+
+    #sidebar .sidebar-link img {
+      width: 30px;
+      height: 30px;
+    }
+
+    #footer {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      color: var(--text-color);
+    }
+
+    #customize-button {
+      border: none;
+      background-color: transparent;
+      cursor: pointer;
+      margin-right: 20px;
+    }
+
+    #customize-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+      width: 400px;
+      padding: 20px;
+      background-color: var(--bg-color);
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 1;
+    }
+
+    #customize-popup h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    #customize-popup input {
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 10px;
+    }
+
+    #customize-popup select {
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 10px;
+    }
+
+    #customize-popup button {
+      border: none;
+      border-radius: 5px;
+      padding: 5px 10px;
+      cursor: pointer;
+      background-color: #fff;
+      color: #333;
+    }
+
+    #customize-popup button:hover {
+      background-color: #e1e1e1;
+    }
+
+    .vintage-cursor {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: var(--cursor-color);
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.2s ease;
+    }
+
+    #biology-facts {
+      position: fixed;
+      top: 50%;
+      left: 0;
+      transform: translateY(-50%);
+      padding: 20px;
+      font-size: 16px;
+      color: var(--text-color);
+      background-color: var(--bg-color);
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      max-width: 300px;
+    }
+
+    #mcat-preparation {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      color: var(--text-color);
+    }
+
+    #mcat-preparation a {
+      margin-right: 10px;
+      color: var(--text-color);
+      text-decoration: underline;
+    }
+
+    #mcat-preparation a:last-child {
+      margin-right: 0;
+    }
+  </style>
+</head>
+<body class="light-mode">
+  <div id="browser-container">
+    <div id="browser">
+      <img id="logo" src="chipmunk_logo.png" alt="Chipmunk Browser Logo">
+      <div id="search-bar">
+        <input id="search-input" type="text" placeholder="Search the web...">
+        <button id="search-button">
+          <img src="search_icon.png" alt="Search">
+        </button>
+      </div>
+      <div id="search-results"></div>
+      <button id="toggle-button">Toggle Mode</button>
+    </div>
+  </div>
+
+  <div id="sidebar">
+    <a class="sidebar-link" href="https://www.gmail.com" target="_blank">
+      <img src="gmail_logo.png" alt="Medium">
+    </a>
+    <a class="sidebar-link" href="https://www.outlook.com" target="_blank">
+      <img src="outlook_logo.png" alt="Discord">
+    </a>
+  </div>
+  
+  <div id="topbar">
+    <a class="topbar-link" href="https://www.gmail.com" target="_blank">
+      <img src="gmail_logo.png" alt="Gmail">
+    </a>
+    
+  </div>
+
+  <div id="footer">
+    <button id="customize-button">Customize</button>
+  </div>
+
+  <div id="customize-popup">
+    <h3>Customize Homepage</h3>
+    <input type="text" placeholder="Background Image URL">
+    <select>
+      <option value="">Default Font</option>
+      <option value="Arial, sans-serif">Arial</option>
+      <option value="Georgia, serif">Georgia</option>
+      <option value="Courier New, monospace">Courier New</option>
+    </select>
+    <button id="apply-button">Apply</button>
+  </div>
+
+  <div id="biology-facts"></div>
+
+  <div id="mcat-preparation">
+    <span>Biology MCAT Preparation:</span>
+    <a href="#" target="_blank">Resource 1</a>
+    <a href="#" target="_blank">Resource 2</a>
+    <a href="#" target="_blank">Resource 3</a>
+  </div>
+
+  <script>
+    const searchInput = document.getElementById('search-input');
+    const searchButton = document.getElementById('search-button');
+    const searchResults = document.getElementById('search-results');
+    const toggleButton = document.getElementById('toggle-button');
+    const customizeButton = document.getElementById('customize-button');
+    const customizePopup = document.getElementById('customize-popup');
+    const applyButton = document.getElementById('apply-button');
+    const biologyFacts = document.getElementById('biology-facts');
+
+    searchButton.addEventListener('click', performSearch);
+    toggleButton.addEventListener('click', toggleMode);
+    customizeButton.addEventListener('click', showCustomizePopup);
+    applyButton.addEventListener('click', applyCustomizations);
+
+    // Biology Facts (Randomly scrapped)
+    const facts = [
+      "Read Biology: Intro to Immunology",
+      "Prof Kruger Research",
+      "Complete PathBird",
+      "Read up on Deseq",
+      "IIT Guwahati AI program"
+    ];
+
+    setInterval(showRandomFact, 5000);
+
+    function showRandomFact() {
+      const randomFact = facts[Math.floor(Math.random() * facts.length)];
+      biologyFacts.textContent = randomFact;
+    }
+
+    function performSearch() {
+      const query = searchInput.value;
+      if (query.trim() !== '') {
+        window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+      }
+    }
+
+    function toggleMode() {
+      document.body.classList.toggle('dark-mode');
+      searchInput.style.color = getComputedStyle(document.body).getPropertyValue('--text-color');
+      searchInput.style.backgroundColor = getComputedStyle(document.body).getPropertyValue('--search-bg-color');
+    }
+
+    function showCustomizePopup() {
+      customizePopup.style.display = 'block';
+    }
+
+    function applyCustomizations() {
+      const backgroundImageURL = document.querySelector('#customize-popup input:nth-of-type(1)').value;
+      const selectedFont = document.querySelector('#customize-popup select').value;
+
+      if (backgroundImageURL.trim() !== '') {
+        document.body.style.backgroundImage = `url(${backgroundImageURL})`;
+      } else {
+        document.body.style.backgroundImage = 'none';
+      }
+
+      if (selectedFont.trim() !== '') {
+        document.body.style.fontFamily = selectedFont;
+      } else {
+        document.body.style.fontFamily = 'Arial, sans-serif';
+      }
+
+      customizePopup.style.display = 'none';
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      const cursor = document.createElement('div');
+      cursor.classList.add('vintage-cursor');
+      cursor.style.left = `${e.clientX}px`;
+      cursor.style.top = `${e.clientY}px`;
+      document.body.appendChild(cursor);
+
+      setTimeout(() => {
+        cursor.remove();
+      }, 500);
+    });
+  </script>
+</body>
+</html>
